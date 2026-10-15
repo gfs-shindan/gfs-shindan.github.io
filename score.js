@@ -43,14 +43,22 @@
       if(close||r.axis[1]>=0)subs.push({id:"apollo",tag:"企業の中身も気になるなら"});
       if(ans[Q_RULE]===-2)subs.push({id:"kenmo",tag:"ルールとデータで判断したいなら"});
       fill=[];
+    }else if(!close){
+      // はっきりファンダ派は、ファンダメンタルズ分析をいちばんまっすぐ実践するヘム講師を必ず出す（2026-10 オーナーと合意）
+      // 配当・伸びる業界への関心が強い人は、その次にリッキー講師・たけぞう講師
+      main={id:"hemu",tag:"まずはここから"};
+      if(ans[Q_DIVIDEND]===2)subs.push({id:"ricky",tag:"配当・優待への関心が強いあなたに"});
+      if(ans[Q_TREND]===2)subs.push({id:"takezou",tag:"これから伸びる業界に注目するあなたに"});
+      if(ans[Q_DIVIDEND]>=1)subs.push({id:"ricky",tag:"配当・優待を狙うなら"});
+      fill=[{id:"ichikawa",tag:"チャートも組み合わせたいなら"}];
     }else{
+      // 僅差のファンダ派
       if(ans[Q_DIVIDEND]===2)main={id:"ricky",tag:"配当・優待への関心が強いあなたに"};
       else if(ans[Q_TREND]===2)main={id:"takezou",tag:"これから伸びる業界に注目するあなたに"};
-      else if(close)main={id:"ichikawa",tag:"チャートも気になるあなたに"};
-      else main={id:"hemu",tag:"まずはここから"};
+      else main={id:"ichikawa",tag:"チャートも気になるあなたに"};
       if(ans[Q_TREND]===2)subs.push({id:"takezou",tag:"伸びる業界・テーマを探したいなら"});
       if(ans[Q_DIVIDEND]>=1)subs.push({id:"ricky",tag:"配当・優待を狙うなら"});
-      if(close)subs.push({id:"ichikawa",tag:"チャートも組み合わせたいなら"});
+      subs.push({id:"ichikawa",tag:"チャートも組み合わせたいなら"});
       if(r.axis[0]>=0.6*r.axisMax[0])subs.push({id:"hemu",tag:"割安な株をじっくり持ちたいなら"});
       fill=[{id:"ichikawa",tag:"チャートも組み合わせたいなら"},{id:"hemu",tag:"割安な株をじっくり持ちたいなら"}];
     }

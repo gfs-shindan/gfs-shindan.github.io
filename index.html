@@ -175,6 +175,8 @@ ul.list li{margin:5px 0}
 .row button{flex:1 1 180px}
 a.copy{display:block;text-align:center;text-decoration:none;flex:1}
 .copy{background:var(--ink);color:var(--bg);border:0;border-radius:12px;padding:14px;font-weight:900}
+#btnLine{flex:1 1 100%;text-align:center;text-decoration:none;background:#06833E;color:#fff}
+#btnLine:not([hidden])~#btnCopy{flex:1 1 100%;background:transparent;color:var(--ink);border:1px solid var(--line)}
 .copybox{width:100%;margin-top:10px;font:inherit;font-size:13px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--body);padding:10px;min-height:120px}
 /* ===== Magic UI を参考にした動き（試作版）。動きを減らす設定では下の media で止まる ===== */
 /* スタート：ヘッダーの点の模様（Dot Pattern） */
@@ -331,8 +333,8 @@ a.copy{display:block;text-align:center;text-decoration:none;flex:1}
 
     <div class="card">
       <h2>結果を専任コンサルに送る</h2>
-      <p style="margin:0;font-size:14px">コピーして、LINEなどに貼り付けて送れます。</p>
-      <div class="row"><button class="copy" id="btnCopy">結果をコピー</button></div>
+      <p style="margin:0;font-size:14px" id="sendNote">コピーして、LINEなどに貼り付けて送れます。</p>
+      <div class="row"><a class="copy" id="btnLine" href="#" hidden>LINEで専任コンサルに送る</a><button class="copy" id="btnCopy">結果をコピー</button></div>
       <textarea class="copybox" id="copyText" readonly hidden aria-label="コピー用の結果"></textarea>
     </div>
 
@@ -451,6 +453,10 @@ const KEY="gfs-style-test-v1";
 // アクションリストから来たとき（?from=list&back=戻り先）だけ、結果画面に「アクションリストに戻る」を出す。
 // 戻り先は下の許可リストのURLだけ（ほかのサイトへ飛ばされないように）。戻り先の # に tech / fund を付けて結果を渡す
 const BACK_ALLOWED=["https://claude.ai/artifact/"];
+// LINEで結果を送るボタン（試験中：URLに ?line=1 を付けて開いたときだけ出す。そのときは集計に送らない）
+// 押すと GFS のLINE公式アカウントへのトークが、結果の文が入った状態で開く。Liny の自動応答がタイプの言葉に反応してタグを付ける
+const LINE_ID="@184pbozb";
+const LINE_TEST=(()=>{try{return new URLSearchParams(location.search).get("line")==="1"}catch(e){return false}})();
 function backUrl(){try{const q=new URLSearchParams(location.search);if(q.get("from")!=="list")return "";const b=q.get("back")||"";
   return BACK_ALLOWED.some(p=>b.startsWith(p))&&!/[#?]/.test(b)?b:""}catch(e){return ""}}
 let ans=new Array(Q.length).fill(null), cur=0, locked=false, announced=-1;
@@ -542,6 +548,11 @@ function finish(restoredAt){ // restoredAt があるときは、保存した前�
   // 講義名はコピー文に入れない（専任コンサルに伝える必要はない、とのフィードバック。2026-10）
   $("copyText").value=lines.join("\n"); $("copyText").hidden=true;
   $("btnCopy").textContent="結果をコピー";
+  if(LINE_TEST){
+    $("btnLine").hidden=false;
+    $("btnLine").href=`https://line.me/R/oaMessage/${encodeURIComponent(LINE_ID)}/?${encodeURIComponent($("copyText").value)}`;
+    $("sendNote").textContent="押すとLINEが開き、結果の文が入った状態になります。そのまま送信してください。送った結果は、専任コンサルが講義の案内に使います。";
+  }
   const back=backUrl(); $("backCard").hidden=!back; if(back)$("btnBack2List").href=`${back}#${r.key}`;
   if(!restoredAt)collect(GFSScore.buildRecord(r,ans,APP_VERSION));
   if(!restoredAt){clear(); saveResult()}
@@ -606,7 +617,7 @@ $("btnCopy").onclick=async()=>{
 };
 // 結果を匿名で送る。送れなくても診断には影響させない（エラーは表示しない）
 function collect(rec){
-  if(!COLLECT_URL||!GFSScore.collectAllowed(location))return;
+  if(!COLLECT_URL||LINE_TEST||!GFSScore.collectAllowed(location))return;
   try{
     fetch(COLLECT_URL,{method:"POST",mode:"no-cors",keepalive:true,
       headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(rec)}).catch(()=>{});

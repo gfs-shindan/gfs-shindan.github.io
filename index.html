@@ -332,9 +332,9 @@ a.copy{display:block;text-align:center;text-decoration:none;flex:1}
     </div>
 
     <div class="card">
-      <h2>結果を専任コンサルに送る</h2>
+      <h2 id="sendH2">結果を専任コンサルに送る</h2>
       <p style="margin:0;font-size:14px" id="sendNote">コピーして、LINEなどに貼り付けて送れます。</p>
-      <div class="row"><a class="copy" id="btnLine" href="#" hidden>LINEで専任コンサルに送る</a><button class="copy" id="btnCopy">結果をコピー</button></div>
+      <div class="row"><a class="copy" id="btnLine" href="#" hidden>LINEに結果を保存する</a><button class="copy" id="btnCopy">結果をコピー</button></div>
       <textarea class="copybox" id="copyText" readonly hidden aria-label="コピー用の結果"></textarea>
     </div>
 
@@ -454,7 +454,8 @@ const KEY="gfs-style-test-v1";
 // 戻り先は下の許可リストのURLだけ（ほかのサイトへ飛ばされないように）。戻り先の # に tech / fund を付けて結果を渡す
 const BACK_ALLOWED=["https://claude.ai/artifact/"];
 // LINEで結果を送るボタン（試験中：URLに ?line=1 を付けて開いたときだけ出す。そのときは集計に送らない）
-// 押すと GFS のLINE公式アカウントへのトークが、結果の文が入った状態で開く。Liny の自動応答がタイプの言葉に反応してタグを付ける
+// 押すと GFS のLINE公式アカウントへのトークが、結果とおすすめの講義が入った状態で開く（受講生本人の記録。専任コンサルの返信は不要）
+// Liny の自動応答がタイプの言葉に反応してタグを付け、「保存しました」と自動で返す（対応マークは変えない）
 const LINE_ID="@184pbozb";
 const LINE_TEST=(()=>{try{return new URLSearchParams(location.search).get("line")==="1"}catch(e){return false}})();
 function backUrl(){try{const q=new URLSearchParams(location.search);if(q.get("from")!=="list")return "";const b=q.get("back")||"";
@@ -550,8 +551,15 @@ function finish(restoredAt){ // restoredAt があるときは、保存した前�
   $("btnCopy").textContent="結果をコピー";
   if(LINE_TEST){
     $("btnLine").hidden=false;
-    $("btnLine").href=`https://line.me/R/oaMessage/${encodeURIComponent(LINE_ID)}/?${encodeURIComponent($("copyText").value)}`;
-    $("sendNote").textContent="押すとLINEが開き、結果の文が入った状態になります。そのまま送信してください。送った結果は、専任コンサルが講義の案内に使います。";
+    // 受講生本人の記録なので、コピー文と違っておすすめの講義（リンク付き）も入れる（2026-10 オーナー）
+    const item=(nm,url)=>`・${nm}${url?`\n${url}`:""}`;
+    const save=[...lines,"",
+      "▼必修講義で復習（受講中の方も見られます）",...comp.slice(0,1).map(c=>item(c.nm,c.link)),"",
+      "▼次に見る講義（必修講義を修了した方向け）",...courses.map(c=>item(c.nm,c.url)),
+      ...(lives.length?["","▼あわせて見たいライブ講義",...lives.map(p=>item(LIVES[p.id].nm,LIVES[p.id].href))]:[])];
+    $("btnLine").href=`https://line.me/R/oaMessage/${encodeURIComponent(LINE_ID)}/?${encodeURIComponent(save.join("\n"))}`;
+    $("sendH2").textContent="結果をLINEに保存する";
+    $("sendNote").textContent="押すとGFSのLINEが開き、結果とおすすめの講義が入った状態になります。そのまま送信すると、トークに残っていつでも見返せます。保存した結果は、専任コンサルが講義の案内の参考にします。";
   }
   const back=backUrl(); $("backCard").hidden=!back; if(back)$("btnBack2List").href=`${back}#${r.key}`;
   if(!restoredAt)collect(GFSScore.buildRecord(r,ans,APP_VERSION));

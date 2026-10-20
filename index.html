@@ -556,10 +556,12 @@ function finish(restoredAt){ // restoredAt があるときは、保存した前�
     const save=[...lines,"",
       "▼必修講義で復習（受講中の方も見られます）",...comp.slice(0,1).map(c=>item(c.nm,c.link)),"",
       "▼次に見る講義（必修講義を修了した方向け）",...courses.map(c=>item(c.nm,c.url)),
-      ...(lives.length?["","▼あわせて見たいライブ講義",...lives.map(p=>item(LIVES[p.id].nm,LIVES[p.id].href))]:[])];
+      ...(lives.length?["","▼あわせて見たいライブ講義",...lives.map(p=>item(LIVES[p.id].nm,LIVES[p.id].href))]:[]),
+      // 22問の答え（Aにとても近い=1 … Bにとても近い=4）。Liny の Webhook で社内用シートに記録する（tools/liny_webhook.gs が読む）
+      "",`回答コード（専任コンサル用）：${APP_VERSION}/${ans.map(v=>({"-2":1,"-1":2,"1":3,"2":4})[v]).join("")}`];
     $("btnLine").href=`https://line.me/R/oaMessage/${encodeURIComponent(LINE_ID)}/?${encodeURIComponent(save.join("\n"))}`;
     $("sendH2").textContent="結果をLINEに保存する";
-    $("sendNote").textContent="押すとGFSのLINEが開き、結果とおすすめの講義が入った状態になります。そのまま送信すると、トークに残っていつでも見返せます。保存した結果は、専任コンサルが講義の案内の参考にします。";
+    $("sendNote").textContent="押すとGFSのLINEが開き、結果とおすすめの講義が入った状態になります。そのまま送信すると、トークに残っていつでも見返せます。保存した結果は、回答の内容も含めて、専任コンサルが講義の案内の参考にします。";
   }
   const back=backUrl(); $("backCard").hidden=!back; if(back)$("btnBack2List").href=`${back}#${r.key}`;
   if(!restoredAt)collect(GFSScore.buildRecord(r,ans,APP_VERSION));

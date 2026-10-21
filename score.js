@@ -117,6 +117,15 @@
     return loc.hostname==="gfs-shindan.github.io";
   }
 
-  const api={score,pickCourses,pickLives,axisLean,buildRecord,collectAllowed};
+  // LINEに保存する文に埋め込む、目に見えない回答の記録（画面には出ない。Liny から社内用シートに送られた文から読み取る）
+  // 形：区切り(U+2063)＋版の数字8桁（1桁を4種類の文字2つで表す）＋22問の回答（Aにとても近い〜Bにとても近いを4種類の文字で）＋区切り
+  const ZW=["\u200B","\u200C","\u200D","\u2060"], ZW_MARK="\u2063";
+  function hiddenRecord(ans, v){
+    const ver=String(v).replace(/\D/g,"").split("").map(c=>{const n=Number(c);return ZW[n>>2]+ZW[n&3]}).join("");
+    const a=ans.map(x=>ZW[{"-2":0,"-1":1,"1":2,"2":3}[x]]).join("");
+    return ZW_MARK+ver+a+ZW_MARK;
+  }
+
+  const api={score,pickCourses,pickLives,axisLean,buildRecord,collectAllowed,hiddenRecord};
   if(typeof module==="object"&&module.exports)module.exports=api; else root.GFSScore=api;
 })(typeof globalThis!=="undefined"?globalThis:this);

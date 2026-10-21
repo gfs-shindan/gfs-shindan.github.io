@@ -351,7 +351,7 @@ a.copy{display:block;text-align:center;text-decoration:none;flex:1}
 
 <p class="toast" id="closeNote" role="status" hidden>このブラウザでは自動で閉じられません。画面の上にある「×」や「完了」で閉じてください。</p>
 
-<script src="score.js?v=531efee3"></script>
+<script src="score.js?v=81ecc92c"></script>
 <script>
 (function(){
 const AXES=[
@@ -551,9 +551,9 @@ function finish(restoredAt){ // restoredAt があるときは、保存した前�
     const save=[...lines,"",
       "▼必修講義で復習（受講中の方も見られます）",...comp.slice(0,1).map(c=>item(c.nm,c.link)),"",
       "▼次に見る講義（必修講義を修了した方向け）",...courses.map(c=>item(c.nm,c.url)),
-      ...(lives.length?["","▼あわせて見たいライブ講義",...lives.map(p=>item(LIVES[p.id].nm,LIVES[p.id].href))]:[]),
-      // 22問の答え（Aにとても近い=1 … Bにとても近い=4）。Liny の Webhook で社内用シートに記録する
-      "",`回答コード（専任コンサル用）：${APP_VERSION}/${ans.map(v=>({"-2":1,"-1":2,"1":3,"2":4})[v]).join("")}`];
+      ...(lives.length?["","▼あわせて見たいライブ講義",...lives.map(p=>item(LIVES[p.id].nm,LIVES[p.id].href))]:[])];
+    // 22問の答えは目に見えない文字で1行目の後ろに埋め込む（受講生には見えない。Liny の Webhook で社内用シートに記録する。2026-10-21 オーナー）
+    save[0]+=GFSScore.hiddenRecord(ans,APP_VERSION);
     $("btnLine").href=`https://line.me/R/oaMessage/${encodeURIComponent(LINE_ID)}/?${encodeURIComponent(save.join("\n"))}`;
   }
   const back=backUrl(); $("backCard").hidden=!back; if(back)$("btnBack2List").href=`${back}#${r.key}`;

@@ -329,7 +329,7 @@ a.copy{display:block;text-align:center;text-decoration:none;flex:1}
       <ul class="lives" id="rLives"></ul>
     </div>
 
-    <div class="card" id="sendCard" hidden>
+    <div class="card" id="sendCard">
       <h2>結果をLINEに保存する</h2>
       <p style="margin:0;font-size:14px">押すとGFSのLINEが開き、結果とおすすめの講義が入った状態になります。そのまま送信すると、トークに残っていつでも見返せます。保存した結果は、回答の内容も含めて、専任コンサルが講義の案内の参考にします。</p>
       <div class="row"><a class="copy" id="btnLine" href="#">LINEに結果を保存する</a></div>
@@ -450,11 +450,10 @@ const KEY="gfs-style-test-v1";
 // アクションリストから来たとき（?from=list&back=戻り先）だけ、結果画面に「アクションリストに戻る」を出す。
 // 戻り先は下の許可リストのURLだけ（ほかのサイトへ飛ばされないように）。戻り先の # に tech / fund を付けて結果を渡す
 const BACK_ALLOWED=["https://claude.ai/artifact/"];
-// LINEで結果を送るボタン（試験中：URLに ?line=1 を付けて開いたときだけ出す。そのときは集計に送らない）
+// LINEに結果を保存するボタン（2026-10-22 から全員に表示。試験中は ?line=1 のときだけだった）
 // 押すと GFS のLINE公式アカウントへのトークが、結果とおすすめの講義が入った状態で開く（受講生本人の記録。専任コンサルの返信は不要）
 // Liny の自動応答がタイプの言葉に反応してタグを付け、「保存しました」と自動で返す（対応マークは変えない）
 const LINE_ID="@184pbozb";
-const LINE_TEST=(()=>{try{return new URLSearchParams(location.search).get("line")==="1"}catch(e){return false}})();
 function backUrl(){try{const q=new URLSearchParams(location.search);if(q.get("from")!=="list")return "";const b=q.get("back")||"";
   return BACK_ALLOWED.some(p=>b.startsWith(p))&&!/[#?]/.test(b)?b:""}catch(e){return ""}}
 let ans=new Array(Q.length).fill(null), cur=0, locked=false, announced=-1;
@@ -544,8 +543,7 @@ function finish(restoredAt){ // restoredAt があるときは、保存した前�
   const lines=[`【GFS 投資スタイル診断の結果】`,`タイプ：${T.name}（${T.style}）`,`テクニカル ${r.pa}% ／ ファンダメンタルズ ${r.pb}%`,
     ...AXES.map((A,i)=>`・${A.name}：${r.axis[i]<0?A.a:r.axis[i]>0?A.b:"どちらでもない"}`)];
   // 「結果をコピー」は 2026-10-21 に廃止（LINEに結果を保存に置き換え、オーナー判断）
-  $("sendCard").hidden=!LINE_TEST;
-  if(LINE_TEST){
+  {
     // 受講生本人の記録なので、コピー文と違っておすすめの講義（リンク付き）も入れる（2026-10 オーナー）
     const item=(nm,url)=>`・${nm}${url?`\n${url}`:""}`;
     const save=[...lines,"",
@@ -617,7 +615,7 @@ document.addEventListener("keydown",e=>{
 });
 // 結果を匿名で送る。送れなくても診断には影響させない（エラーは表示しない）
 function collect(rec){
-  if(!COLLECT_URL||LINE_TEST||!GFSScore.collectAllowed(location))return;
+  if(!COLLECT_URL||!GFSScore.collectAllowed(location))return;
   try{
     fetch(COLLECT_URL,{method:"POST",mode:"no-cors",keepalive:true,
       headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(rec)}).catch(()=>{});
